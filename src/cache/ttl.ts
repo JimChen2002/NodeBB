@@ -1,5 +1,4 @@
 import TTLCache = require('@isaacs/ttlcache');
-// import pubsub = require('../pubsub');
 
 interface Options {
     name?: string,
