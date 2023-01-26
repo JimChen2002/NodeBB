@@ -1,4 +1,5 @@
 import TTLCache = require('@isaacs/ttlcache');
+import pubsub = require('../pubsub');
 
 interface Options {
     name?: string,
@@ -23,9 +24,6 @@ interface Cache {
 }
 
 export = function (opts: Options) {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-unsafe-assignment
-    const pubsub = require('../pubsub');
-
     const ttlCache = new TTLCache<string, number>(opts);
 
     const cache = {} as Cache;
@@ -79,7 +77,6 @@ export = function (opts: Options) {
         if (!Array.isArray(keys)) {
             keys = [keys];
         }
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         pubsub.publish(`${cache.name}:ttlCache:del`, keys);
         keys.forEach(key => ttlCache.delete(key));
     };
@@ -92,18 +89,15 @@ export = function (opts: Options) {
     }
 
     cache.reset = function () {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         pubsub.publish(`${cache.name}:ttlCache:reset`);
         localReset();
     };
     cache.clear = cache.reset;
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
     pubsub.on(`${cache.name}:ttlCache:reset`, () => {
         localReset();
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
     pubsub.on(`${cache.name}:ttlCache:del`, (keys: string[]) => {
         if (Array.isArray(keys)) {
             keys.forEach(key => ttlCache.delete(key));
