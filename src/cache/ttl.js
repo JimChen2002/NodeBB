@@ -1,13 +1,14 @@
 "use strict";
 const TTLCache = require("@isaacs/ttlcache");
-const pubsub = require("../pubsub");
 module.exports = function (opts) {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-unsafe-assignment
+    const pubsub = require('../pubsub');
     const ttlCache = new TTLCache(opts);
     const cache = {};
     cache.name = opts.name;
     cache.hits = 0;
     cache.misses = 0;
-    cache.enabled = opts.enabled === undefined ? false : opts.enabled;
+    cache.enabled = opts.hasOwnProperty('enabled') ? opts.enabled : true;
     // expose properties
     const propertyMap = new Map([
         ['max', 'max'],
@@ -32,7 +33,7 @@ module.exports = function (opts) {
         if (ttl) {
             opts.ttl = ttl;
         }
-        ttlCache.set(key, value, opts);
+        ttlCache.set.apply(ttlCache, [key, value, opts]);
     };
     cache.get = function (key) {
         if (!cache.enabled) {
@@ -51,6 +52,7 @@ module.exports = function (opts) {
         if (!Array.isArray(keys)) {
             keys = [keys];
         }
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         pubsub.publish(`${cache.name}:ttlCache:del`, keys);
         keys.forEach(key => ttlCache.delete(key));
     };
@@ -61,13 +63,16 @@ module.exports = function (opts) {
         cache.misses = 0;
     }
     cache.reset = function () {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         pubsub.publish(`${cache.name}:ttlCache:reset`);
         localReset();
     };
     cache.clear = cache.reset;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
     pubsub.on(`${cache.name}:ttlCache:reset`, () => {
         localReset();
     });
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
     pubsub.on(`${cache.name}:ttlCache:del`, (keys) => {
         if (Array.isArray(keys)) {
             keys.forEach(key => ttlCache.delete(key));
